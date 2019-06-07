@@ -1,0 +1,3 @@
+{:deps {lilactown/hx {:mvn/version "0.5.2"}
+        org.clojure/clojurescript {:mvn/version "1.10.520"}}
+ :paths ["src"]}
