@@ -2,35 +2,77 @@
   (:require
    [react :as react]
 
-   [hx-frame.dispatcher :as dispatcher]
    [hx-frame.registrar :as registrar]))
 
 (def app-state (react/createContext))
-(defonce ^{:private true} hx-frame-effect-id ::effect-id)
 
-(defn- is-effect? [event]
-  (-> event first (= hx-frame-effect-id)))
+(def ^{:private true} empty-queue #queue [])
+
+(defn- invoke-interceptor-fn
+  ^{:doc "Invokes the handler of an intercptor that corresponds to the
+direction that the chain is executing."
+    :attribution "https://github.com/Day8/re-frame"}
+  [context interceptor direction]
+  (if-let [f (get interceptor direction)]
+    (f context)
+    context))
+
+(defn- walk-interceptors
+  ^{:doc "Walks the interceptor chain calling the corresponding handler for the
+execution direction."
+    :attribution "https://github.com/Day8/re-frame"}
+  [context direction]
+  (loop [context context]
+    (let [{:keys [queue stack]} context]
+      (if (empty? queue)
+        context
+        (let [interceptor (peek queue)]
+          (recur (-> context
+                     (assoc :queue (pop queue)
+                            :stack (conj stack interceptor))
+                     (invoke-interceptor-fn interceptor direction))))))))
+
+(defn- enqueue
+  ^{:doc "Sets a new queue on the interceptor chain context object"
+    :attribution "https://github.com/Day8/re-frame"}
+  [context interceptors]
+  (update context :queue
+          (fnil into empty-queue)
+          interceptors))
+
+(defn- change-direction
+  ^{:doc "Changes the direction of the interceptor queue."
+    :attribution "https://github.com/Day8/re-frame"}
+  [context]
+  (-> context
+      (dissoc :queue)
+      (enqueue (:stack context))))
+
+(defn- create-context
+  "Creates the interceptor chain context object. This is one area that differs
+  from re-frame. hx-frame initializes the coeffects object with the :db value
+  in addition to the :event vector. This is because hx-frame leverages react's
+  context API and is expected to return state at the end of the state reduction
+  function. The handling of the db effect occures in the state-reducer and not
+  in a coeffect."
+  [state event interceptors]
+  (-> {}
+      (assoc-in [:coeffects :event] event)
+      (assoc-in [:coeffects :db] state)
+      (enqueue interceptors)))
 
 (defn state-reducer
-  "Dispatches the corresponding event handler"
+  "Processes a given event by looking up it's registered interceptor chain
+  and walking it."
   [state event]
-  (if (is-effect? event)
-    (if-let [effect-handler (registrar/get-handler :effect (second event))]
+  (let [event-key (first event)]
+    (if-let [interceptor-chain (registrar/get-handler :event event-key)]
+      (let [context (create-context state event interceptor-chain)
+            {:keys [effects]} (-> context
+                                  (walk-interceptors :before)
+                                  (change-direction)
+                                  (walk-interceptors :after))]
+        (:db effects))
       (do
-        (effect-handler (nth event 2))
-        state)
-      (do
-        (js/console.error "Effect " (second event) " not defined.")
-        state))
-    (if-let [handler (registrar/get-handler :event (first event))]
-      (let [updated-context (handler {:db state} event)
-            effects (map identity (dissoc updated-context :db))]
-
-        (when (seq effects)
-          (doseq [[effect-id effect-data] effects]
-            (@dispatcher/dispatch! [hx-frame-effect-id effect-id effect-data])))
-
-        (:db updated-context))
-      (do
-        (js/console.error "Event " (first event) " not defined.")
+        (js/console.error "Event " event-key " not defined.")
         state))))
