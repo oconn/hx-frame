@@ -3,7 +3,7 @@
 
   Inspired by Day8/re-frame's registrar")
 
-(def handler-types #{:event :subscription})
+(def handler-types #{:event :subscription :effect :coeffect})
 
 (def registrar (atom {}))
 
