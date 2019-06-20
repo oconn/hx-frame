@@ -56,6 +56,9 @@
       interceptors
       (event-db-handler->interceptor handler)]))))
 
+;; Alias
+(def reg-event-db register-event-db)
+
 (defn register-event-fx
   ([handler-id handler]
    (register-event-fx handler-id nil handler))
@@ -67,13 +70,22 @@
       interceptors
       (event-fx-handler->interceptor handler)]))))
 
+;; Alias
+(def reg-event-fx register-event-fx)
+
 (defn register-effect
   [handler-id handler]
   (registrar/register-handler! :effect handler-id handler))
 
+;; Alias
+(def reg-fx register-effect)
+
 (defn register-coeffect
   [handler-id handler]
   (registrar/register-handler! :coeffect handler-id handler))
+
+;; Alias
+(def reg-cofx register-coeffect)
 
 (defn inject-coeffect
   [id]
@@ -85,6 +97,9 @@
                 context))}))
 
 (def register-subscription (partial registrar/register-handler! :subscription))
+
+;; Alias
+(def reg-sub register-subscription)
 
 (defnc Provider
   [{:keys [children initial-state on-init]

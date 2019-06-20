@@ -25,7 +25,7 @@
 
             db (or (:db effects)
                    (do
-                     (js/console.error "DB effect remove from '" event-key "'")
+                     (js/console.error "DB effect removed from '" event-key "'")
                      state))]
 
         (when ^boolean js/goog.DEBUG
@@ -40,5 +40,7 @@
 
         db)
       (do
-        (js/console.error "Event " event-key " not defined.")
+        (when ^boolean js/goog.DEBUG
+          (js/console.error
+           "Event " event-key " has been dispatched but is not defined."))
         state))))

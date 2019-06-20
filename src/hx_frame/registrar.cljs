@@ -26,12 +26,7 @@
 (defn get-handler
   "Returns the requested handler."
   [handler-type handler-id]
-  (let [handler (get-in @registrar [handler-type handler-id])]
-    (or handler
-        (do
-          (js/console.warn
-           (str "No " (name handler-type) " defined for " handler-id))
-          nil))))
+  (get-in @registrar [handler-type handler-id]))
 
 (defn is-registered?
   "Check to for handler registration"
