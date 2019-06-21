@@ -4,10 +4,10 @@
    [hx.react :as hx :refer [defnc]]
 
    [hx-frame.db :as db]
+   [hx-frame.dispatcher :as dispatcher]
    [hx-frame.interceptor :as interceptor]
-   [hx-frame.registrar :as registrar]))
-
-(def ^{:private true} react-dispatcher (atom nil))
+   [hx-frame.registrar :as registrar]
+   [hx-frame.effects :as effects]))
 
 (defn- event-db-handler->interceptor
   [handler]
@@ -32,9 +32,6 @@
        (remove nil?)))
 
 ;; Public API
-
-(defn dispatch [event]
-  (@react-dispatcher event))
 
 (defn subscribe
   "Listens to global state changes (useContext)"
@@ -73,13 +70,6 @@
 ;; Alias
 (def reg-event-fx register-event-fx)
 
-(defn register-effect
-  [handler-id handler]
-  (registrar/register-handler! :effect handler-id handler))
-
-;; Alias
-(def reg-fx register-effect)
-
 (defn register-coeffect
   [handler-id handler]
   (registrar/register-handler! :coeffect handler-id handler))
@@ -107,10 +97,15 @@
   (let [[state dispatch] (hooks/useReducer db/state-reducer initial-state)]
 
     ;; Set a global dispatcher to support the ability to directly call it
-    (when (nil? @react-dispatcher)
-      (reset! react-dispatcher dispatch)
+    (when (nil? @dispatcher/react-dispatcher)
+      (reset! dispatcher/react-dispatcher dispatch)
       (on-init))
 
     [:provider {:context db/app-state
                 :value [state dispatch]}
      children]))
+
+(def dispatch dispatcher/dispatch)
+
+(def register-effect effects/register-effect)
+(def reg-fx effects/register-effect)
