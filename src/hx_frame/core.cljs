@@ -94,7 +94,7 @@
 (defnc Provider
   [{:keys [children initial-state on-init]
     :or {on-init identity}}]
-  (let [[state dispatch] (hooks/useReducer db/state-reducer initial-state)]
+  (let [[state dispatch] (db/hx-reducer initial-state)]
 
     ;; Set a global dispatcher to support the ability to directly call it
     (when (nil? @dispatcher/react-dispatcher)
@@ -106,6 +106,5 @@
      children]))
 
 (def dispatch dispatcher/dispatch)
-
 (def register-effect effects/register-effect)
 (def reg-fx effects/register-effect)
