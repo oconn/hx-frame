@@ -94,6 +94,10 @@
 (defnc Provider
   [{:keys [children initial-state on-init]
     :or {on-init identity}}]
+  ;; TODO: This throws in advanced with:
+  ;; Invariant Violation: Invalid hook call. Hooks can only be called inside of
+  ;; the body of a function component. This could happen for one of the
+  ;; following reasons:
   (let [[state dispatch] (db/hx-reducer initial-state)]
 
     ;; Set a global dispatcher to support the ability to directly call it
