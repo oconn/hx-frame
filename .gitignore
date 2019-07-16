@@ -16,3 +16,4 @@ figwheel_server.log
 .rebel_readline_history
 node_modules
 dist
+app.jar

@@ -1,6 +1,22 @@
 {:deps {lilactown/hx {:mvn/version "0.5.2"}
         org.clojure/clojurescript {:mvn/version "1.10.520"}}
  :paths ["src"]
- :aliases {:test {:extra-paths ["test"]
-                  :extra-deps {olical/cljs-test-runner {:mvn/version "3.5.0"}}
-                  :main-opts ["-m" "cljs-test-runner.main"]}}}
+ :aliases {:test
+           {:extra-paths ["test"]
+            :extra-deps {olical/cljs-test-runner {:mvn/version "3.5.0"}}
+            :main-opts ["-m" "cljs-test-runner.main"]}
+
+           :pack
+           {:main-opts
+            ["-m" "mach.pack.alpha.skinny" "--no-libs" "--project-path" "app.jar"]
+
+            :extra-deps
+            {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
+                              :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
+
+           :deploy
+           {:main-opts
+            ["-m" "deps-deploy.deps-deploy" "deploy" "app.jar"]
+
+            :extra-deps
+            {deps-deploy {:mvn/version "RELEASE"}}}}}
