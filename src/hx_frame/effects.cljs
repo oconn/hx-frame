@@ -18,6 +18,6 @@
   :dispatch-n
   (fn [value]
     (if-not (sequential? value)
-      (js/console.errot ":dispatch-n expected a collection but got: " value)
+      (js/console.error ":dispatch-n expected a collection but got: " value)
       (doseq [event (remove nil? value)]
         (dispatcher/dispatch event)))))
