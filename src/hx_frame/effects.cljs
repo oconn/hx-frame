@@ -15,9 +15,15 @@
      (dispatcher/dispatch value))))
 
 (register-effect
-  :dispatch-n
-  (fn [value]
-    (if-not (sequential? value)
-      (js/console.error ":dispatch-n expected a collection but got: " value)
-      (doseq [event (remove nil? value)]
-        (dispatcher/dispatch event)))))
+ :dispatch-n
+ (fn [value]
+   (if-not (sequential? value)
+     (js/console.error ":dispatch-n expected a collection but got: " value)
+     (doseq [event (remove nil? value)]
+       (dispatcher/dispatch event)))))
+
+(register-effect
+ :invoke
+ (fn [custom-fn]
+   (when (ifn? custom-fn)
+     (custom-fn))))
