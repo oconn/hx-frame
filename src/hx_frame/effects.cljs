@@ -23,6 +23,15 @@
        (dispatcher/dispatch event)))))
 
 (register-effect
+ :dispatch-later
+ (fn [value]
+   (doseq [{:keys [ms event] :as effect} (remove nil? value)]
+     (if (or (empty? event) (not (number? ms)))
+       (js/console.error
+        :error "hx-frame: ignoring bad :dispatch-later value:" effect)
+       (js-invoke js/window "setTimeout" #(dispatcher/dispatch event) ms)))))
+
+(register-effect
  :invoke
  (fn [custom-fn]
    (when (ifn? custom-fn)
