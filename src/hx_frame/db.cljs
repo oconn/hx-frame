@@ -1,6 +1,5 @@
 (ns hx-frame.db
   (:require
-   [clojure.data :as data]
    [react :as react]
    [hx.hooks :as hooks]
 
@@ -38,15 +37,7 @@
                 inc)]
 
         (when ^boolean js/goog.DEBUG
-          (reset! dev-app-state db)
-
-          ;; Tap used to communicate state changes to
-          ;; https://github.com/Lokeh/punk2
-          (tap> {:event event
-                 :db-before state
-                 :db-after db
-                 :db-diff (first (data/diff db state))}))
-
+          (reset! dev-app-state db))
         db)
       (do
         (when ^boolean js/goog.DEBUG
@@ -56,5 +47,5 @@
 
 (defn hx-reducer
   [initial-state]
-  (let [memoized-reducer (hooks/useCallback state-reducer ["no-update"])]
+  (let [memoized-reducer (hooks/useCallback state-reducer [])]
     (hooks/useReducer memoized-reducer initial-state)))
