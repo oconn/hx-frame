@@ -35,12 +35,33 @@
 ;; Public API
 
 (defn subscribe
-  "Listens to global state changes (useContext)"
+  "Subscribes to global state changes (React Context)"
   [[handler-id & args]]
   (if-let [handler (registrar/get-handler :subscription handler-id)]
     (let [[state _] (hooks/useContext db/app-state)]
       (handler state (into [handler-id] args)))
     (js/console.error "Subscription " handler-id " not defined.")))
+
+(defn subscribe-ds
+  "Subscribes to global state changes (Datascript DB)"
+  [[handler-id & args]]
+  (if-let [handler (registrar/get-handler :subscription handler-id)]
+    (let [[current-state set-state] (hooks/useState nil)]
+      (hooks/useEffect
+       (fn []
+         (let [listener-id
+               (db/listen! (db/get-conn)
+                           #(set-state (handler (db/get-conn)
+                                                (into [handler-id] args))))]
+           (fn []
+             (db/unlisten! (db/get-conn) listener-id)))))
+
+      current-state)
+    (js/console.error "Subscription " handler-id " not defined.")))
+
+(def subscribe-ctx
+  "Defaults to React Context Method"
+  subscribe)
 
 (defn register-event-db
   "Adds an event to the registrar"

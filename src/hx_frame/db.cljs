@@ -1,10 +1,60 @@
 (ns hx-frame.db
   (:require
+   [datascript.core :as d]
    [react :as react]
    [hx.hooks :as hooks]
 
    [hx-frame.registrar :as registrar]
    [hx-frame.interceptor :as interceptor]))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Datascript Implementation
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defonce ^:private conn (atom nil))
+
+;; Aliases
+(def listen! d/listen!)
+(def unlisten! d/unlisten!)
+
+(defn get-conn
+  "Returns the connection atom"
+  [] @conn)
+
+(defn get-db
+  "Returns the db object from the connection object"
+  [] (d/db (get-conn)))
+
+(defn create-conn
+  "Create Datascript connection"
+  [{:keys [schema]}]
+  (reset! conn (d/create-conn schema)))
+
+(defn remove-nils
+  "Removes nils from a map. Used to clean records on transaction."
+  [record]
+  (reduce-kv (fn [acc k v]
+               (if (nil? v)
+                 acc
+                 (assoc acc k v)))
+             {}
+             record))
+
+(defn transact!
+  [datoms]
+  (d/transact! (get-conn) datoms))
+
+(defn q
+  [query & args]
+  (apply d/q query (get-db) args))
+
+(defn pull
+  [& args]
+  (apply d/pull (get-db) args))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; React Context Implementation
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def dev-app-state
   "Set on state updates when goog.DEBUG is set to true"
@@ -13,6 +63,10 @@
 (def app-state
   "Application state object"
   (react/createContext))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; State Reducer
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- state-reducer
   "Processes a given event by looking up it's registered interceptor chain
