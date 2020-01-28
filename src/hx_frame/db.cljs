@@ -82,17 +82,16 @@
             ;;       are triggered in the event. Introducing an incrementing
             ;;       counter solves this problem but I'm sure there is a better
             ;;       solution using useContext or useMemo on the reducer.
-            db (update
-                (or (:db effects)
-                    (do
-                      (js/console.error "DB effect removed from '" event-key "'")
-                      state))
-                :hx-event-counter
-                inc)]
+            updated-db (when (some? (:db effects))
+                         (update (:db effects) :hx-event-counter inc))]
 
-        (when ^boolean js/goog.DEBUG
-          (reset! dev-app-state db))
-        db)
+        (when (and ^boolean js/goog.DEBUG
+                   (some? updated-db))
+          (reset! dev-app-state updated-db))
+
+        (if (some? updated-db)
+          updated-db
+          state))
       (do
         (when ^boolean js/goog.DEBUG
           (js/console.error
