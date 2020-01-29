@@ -46,13 +46,14 @@
   "Subscribes to global state changes (Datascript DB)"
   [[handler-id & args]]
   (if-let [handler (registrar/get-handler :subscription handler-id)]
-    (let [[current-state set-state] (hooks/useState nil)]
+    (let [get-handler-value #(handler (db/get-conn)
+                                      (into [handler-id] args))
+          [current-state set-state] (hooks/useState (get-handler-value))]
       (hooks/useEffect
        (fn []
          (let [listener-id
                (db/listen! (db/get-conn)
-                           #(set-state (handler (db/get-conn)
-                                                (into [handler-id] args))))]
+                           #(set-state (get-handler-value)))]
            (fn []
              (db/unlisten! (db/get-conn) listener-id)))))
 
